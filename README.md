@@ -4,5 +4,9 @@
 3D game created using OpengGL, for learning purposes.
 
 ## Dependencies
-- GLEW
-- GLFW
+- static libraries
+	- GLEW
+	- GLFW
+- header only libraries
+	- glm
+	- stb_image
