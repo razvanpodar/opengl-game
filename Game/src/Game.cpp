@@ -1,16 +1,25 @@
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include <iostream>
-
-#include "EventManager.h"
-#include "Shader.h"
-#include "vendor/stb_image/stb_image.h"
-#include "vendor/glm/glm.hpp"
-#include "vendor/glm/gtc/matrix_transform.hpp"
-#include "vendor/glm/gtc/type_ptr.hpp"
+#include "Game.h"
 
 const char* vShaderPath = "shaders/shader.vs";
 const char* fShaderPath = "shaders/shader.fs";
+
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+// settings
+const unsigned int SCR_WIDTH = 800;
+const unsigned int SCR_HEIGHT = 600;
+
+// delta time
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+
+Camera camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+float lastX = SCR_WIDTH / 2.0f;
+float lastY = SCR_HEIGHT / 2.0f;
+bool firstMouse = true;
 
 int main()
 {
@@ -35,6 +44,9 @@ int main()
 
     // Make the window's context current
     glfwMakeContextCurrent(window);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // Init GLEW after creating a GLFW context
     glewInit();
@@ -236,11 +248,25 @@ int main()
     unsigned int projectionLoc = glGetUniformLocation(shader.m_sProgramID, "projection");
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
+    glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+    glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 cameraDirection = glm::normalize(cameraPos - cameraTarget);
+    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
+    glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
+
+    view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(window))
     {
+        // Calculate delta time
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
         // Inputs
-        eventManager.ProcessInputs(window);
+        eventManager.ProcessInputs(window, camera, deltaTime);
 
         // Render here
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -253,7 +279,15 @@ int main()
         glBindTexture(GL_TEXTURE_2D, texture2);
 
         shader.Use();
+
+        projection = glm::perspective(glm::radians(camera.m_zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
+        view = camera.GetViewMatrix();
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+
         glBindVertexArray(VAO);
+
         // Update transformations matrices
         for (unsigned int i = 0; i < 10; i++)
         {
@@ -283,4 +317,29 @@ int main()
     glfwTerminate();
 
 	return 0;
+}
+
+// glfw: whenever the mouse moves, this callback is called
+// -------------------------------------------------------
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    if (firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+
+    lastX = xpos;
+    lastY = ypos;
+
+    camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    camera.ProcessMouseScroll(yoffset);
 }
