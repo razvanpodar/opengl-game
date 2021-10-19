@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include "GL/glew.h"
 #include "vendor/stb_image/stb_image.h"
