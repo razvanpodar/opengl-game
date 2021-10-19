@@ -44,12 +44,20 @@ void TextureManager::AddTexture(int type)
 
 void TextureManager::BindTexture(int index)
 {
-    if (m_textures[index] == 0)
-        std::cout << "There is no texture at that index!" << std::endl;
-    //glActiveTexture(index);
-    if (index == 0)
-        glActiveTexture(GL_TEXTURE0);
-    if (index == 1)
-        glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, m_textures[index]);
+    if (index < 0 || index >= TEXTURE_COUNT)
+    {
+        std::cout << "TEXTURE::MANAGER::The index " << index 
+            << " is not in range! (0, " << TEXTURE_COUNT - 1 << ")" << std::endl;
+    }
+    else
+    {
+        if (m_textures[index] == 0)
+        {
+            std::cout << "TEXTURE::MANAGER::There is no texture at index " 
+                << index << std::endl;
+            return;
+        }
+        glActiveTexture(GL_TEXTURE0 + index);
+        glBindTexture(GL_TEXTURE_2D, m_textures[index]);
+    }
 }
