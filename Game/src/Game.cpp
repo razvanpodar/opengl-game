@@ -165,8 +165,26 @@ int main()
         lightShader.Use();
         lightShader.SetUniform3fv("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
         lightShader.SetUniform3fv("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-        lightShader.SetUniform3fv("lightPos", lightPos); 
+        lightShader.SetUniform3fv("lightPos", lightPos);
         lightShader.SetUniform3fv("viewPos", camera.m_position);
+        lightShader.SetUniform3fv("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
+        lightShader.SetUniform3fv("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
+        lightShader.SetUniform3fv("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+        lightShader.SetUniform1f("material.shininess", 32.0f);
+
+        glm::vec3 lightColor;
+        lightColor.x = sin(glfwGetTime() * 2.0f);
+        lightColor.y = sin(glfwGetTime() * 0.7f);
+        lightColor.z = sin(glfwGetTime() * 1.3f);
+
+        glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
+        glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
+
+        lightShader.SetUniform3fv("light.ambient", ambientColor);
+        lightShader.SetUniform3fv("light.diffuse", diffuseColor);
+        //lightShader.SetUniform3fv("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+        //lightShader.SetUniform3fv("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+        lightShader.SetUniform3fv("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 
         // Update transformations matrices
         glm::mat4 projection = glm::perspective(glm::radians(camera.m_zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
