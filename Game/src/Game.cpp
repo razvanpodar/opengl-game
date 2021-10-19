@@ -3,10 +3,6 @@
 const char* vShaderPath = "shaders/shader.vs";
 const char* fShaderPath = "shaders/shader.fs";
 
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -51,13 +47,12 @@ int main()
     // Init GLEW after creating a GLFW context
     glewInit();
 
-    // Initialize
-    EventManager eventManager;
-    
     // Enable depth testing
     glEnable(GL_DEPTH_TEST);
 
-    // Load vertex shader
+    // Initialize
+    EventManager eventManager;
+    TextureManager textureManager;
     Shader shader(vShaderPath, fShaderPath);
 
     // Temporary - will be moved to some classes
@@ -161,60 +156,15 @@ int main()
     //0.5f, 1.0f   // top-center corner
     //};
 
-    unsigned int texture1, texture2;
-    glGenTextures(1, &texture1);
-    glBindTexture(GL_TEXTURE_2D, texture1);
+    textureManager.LoadImage("res/container.jpg");
+    textureManager.AddTexture(0);
 
-    // Set wrapping type
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    // Set filtering type
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // Load image
-    int width, height, nrChannels;
-    stbi_set_flip_vertically_on_load(true);
-    unsigned char* data = stbi_load("res/container.jpg", &width, &height, &nrChannels, 0);
-    
-    if (data)
-    {
-        // Generate texture
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    
-    stbi_image_free(data);
-
-    glGenTextures(1, &texture2);
-    glBindTexture(GL_TEXTURE_2D, texture2);
-    // set the texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // set texture filtering parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    stbi_set_flip_vertically_on_load(true);
-    data = stbi_load("res/awesomeface.png", &width, &height, &nrChannels, 0);
-
-    if (data)
-    {
-        // Generate texture
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cout << "Failed to load texture" << std::endl;
-    }
-
-    stbi_image_free(data);
+    textureManager.LoadImage("res/awesomeface.png");
+    textureManager.AddTexture(1);
 
     shader.Use();
-    glUniform1i(glGetUniformLocation(shader.m_sProgramID, "texture1"), 0);
-    glUniform1i(glGetUniformLocation(shader.m_sProgramID, "texture2"), 1);
+    shader.SetUniform1i("texture1", 0);
+    shader.SetUniform1i("texture2", 1);
 
     glm::vec3 cubePositions[] = {
     glm::vec3(0.0f,  0.0f,  0.0f),
@@ -235,27 +185,17 @@ int main()
     glm::mat4 view = glm::mat4(1.0f);
     // note that we're translating the scene in the reverse direction of where we want to move
     view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-
+    
     glm::mat4 projection;
     projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
 
-    unsigned int modelLoc = glGetUniformLocation(shader.m_sProgramID, "model");
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    shader.SetUniformMatrix4fv("model", model);
+    shader.SetUniformMatrix4fv("view", view);
+    shader.SetUniformMatrix4fv("projection", projection);
 
-    unsigned int viewLoc = glGetUniformLocation(shader.m_sProgramID, "view");
-    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-
-    unsigned int projectionLoc = glGetUniformLocation(shader.m_sProgramID, "projection");
-    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-
-    glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-    glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
-    glm::vec3 cameraDirection = glm::normalize(cameraPos - cameraTarget);
-    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-    glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
-    glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
-
-    view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+    // Bind textures
+    textureManager.BindTexture(0);
+    textureManager.BindTexture(1);
 
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(window))
@@ -272,33 +212,26 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Bind textures
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture1);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, texture2);
-
         shader.Use();
 
         projection = glm::perspective(glm::radians(camera.m_zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+        shader.SetUniformMatrix4fv("projection", projection);
 
         view = camera.GetViewMatrix();
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        shader.SetUniformMatrix4fv("view", view);
 
         glBindVertexArray(VAO);
-
-        // Update transformations matrices
         for (unsigned int i = 0; i < 10; i++)
         {
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, cubePositions[i]);
             float angle = 20.0f * i;
             model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+            shader.SetUniformMatrix4fv("model", model);
 
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
+        // Update transformations matrices
 
         //glDrawArrays(GL_TRIANGLES, 0, 3);
         //glDrawArrays(GL_TRIANGLES, 0, 36);

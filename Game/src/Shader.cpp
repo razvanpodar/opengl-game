@@ -18,19 +18,37 @@ void Shader::Delete()
     glDeleteProgram(m_sProgramID);
 }
 
-void Shader::SetBool(const std::string& name, bool value) const
+void Shader::SetUniform1i(const std::string& name, int value) const
 {
-    glUniform1i(glGetUniformLocation(m_sProgramID, name.c_str()), (int)value);
+    unsigned int location = glGetUniformLocation(m_sProgramID, name.c_str());
+    glUniform1i(location, value);
 }
 
-void Shader::SetInt(const std::string& name, int value) const
+void Shader::SetUniform1f(const std::string& name, float value) const
 {
-    glUniform1i(glGetUniformLocation(m_sProgramID, name.c_str()), value);
+    unsigned int location = glGetUniformLocation(m_sProgramID, name.c_str());
+    glUniform1i(location, value);
 }
 
-void Shader::SetFloat(const std::string& name, float value) const
+void Shader::SetUniform3fv(const std::string& name, glm::vec3 value)
 {
-    glUniform1f(glGetUniformLocation(m_sProgramID, name.c_str()), value);
+    unsigned int location = glGetUniformLocation(m_sProgramID, name.c_str());
+    glUniform3fv(location, 1, glm::value_ptr(value));
+}
+void Shader::SetUniform4fv(const std::string& name, glm::vec4 value)
+{
+    unsigned int location = glGetUniformLocation(m_sProgramID, name.c_str());
+    glUniform4fv(location, 1, glm::value_ptr(value));
+}
+void Shader::SetUniformMatrix3fv(const std::string& name, glm::mat3 value)
+{
+    unsigned int location = glGetUniformLocation(m_sProgramID, name.c_str());
+    glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(value));
+}
+void Shader::SetUniformMatrix4fv(const std::string& name, glm::mat4 value)
+{
+    unsigned int location = glGetUniformLocation(m_sProgramID, name.c_str());
+    glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
 }
 
 const std::string Shader::ParseShader(const char* shaderPath)

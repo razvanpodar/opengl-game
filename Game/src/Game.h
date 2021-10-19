@@ -10,6 +10,7 @@
 #include "Camera.h"
 #include "EventManager.h"
 #include "Shader.h"
+#include "TextureManager.h"
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);

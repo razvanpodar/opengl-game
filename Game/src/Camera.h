@@ -43,7 +43,6 @@ public:
         return glm::lookAt(m_position, m_position + m_front, m_up);    
     }
 
-
 private:
     void UpdateCameraVectors();
 };
