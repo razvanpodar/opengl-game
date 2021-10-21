@@ -184,12 +184,15 @@ int main()
         lightShader.Use();
 
         lightShader.SetUniform3fv("viewPos", camera.m_position);
-        lightShader.SetUniform3fv("light.position", lightPos);
+        //lightShader.SetUniform3fv("light.position", lightPos);
 
         lightShader.SetUniform3fv("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
         lightShader.SetUniform3fv("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
         lightShader.SetUniform3fv("lightPos", lightPos);
-        //lightShader.SetUniform3fv("light.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+        lightShader.SetUniform3fv("light.position", camera.m_position);
+        lightShader.SetUniform3fv("light.direction", camera.m_front);
+        lightShader.SetUniform1f("light.cutOff", glm::cos(glm::radians(12.5f)));
+        lightShader.SetUniform1f("light.outerCutOff", glm::cos(glm::radians(17.5f)));
         lightShader.SetUniform3fv("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
         lightShader.SetUniform1f("material.shininess", 64.0f);
 
