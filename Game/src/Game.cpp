@@ -184,18 +184,22 @@ int main()
         lightShader.Use();
 
         lightShader.SetUniform3fv("viewPos", camera.m_position);
-        //lightShader.SetUniform3fv("light.position", lightPos);
+        lightShader.SetUniform3fv("light.position", lightPos);
 
         lightShader.SetUniform3fv("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
         lightShader.SetUniform3fv("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-        //lightShader.SetUniform3fv("lightPos", lightPos);
-        lightShader.SetUniform3fv("light.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+        lightShader.SetUniform3fv("lightPos", lightPos);
+        //lightShader.SetUniform3fv("light.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
         lightShader.SetUniform3fv("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
         lightShader.SetUniform1f("material.shininess", 64.0f);
 
         lightShader.SetUniform3fv("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
         lightShader.SetUniform3fv("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
         lightShader.SetUniform3fv("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
+        lightShader.SetUniform1f("light.constant", 1.0f);
+        lightShader.SetUniform1f("light.linear", 0.09f);
+        lightShader.SetUniform1f("light.quadratic", 0.032f);
 
         // Update transformations matrices
         glm::mat4 projection = glm::perspective(glm::radians(camera.m_zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
