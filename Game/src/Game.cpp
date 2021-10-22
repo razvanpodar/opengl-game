@@ -113,18 +113,21 @@ int main()
         -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
     };
 
-    glm::vec3 cubePositions[] = {
-    glm::vec3(0.0f,  0.0f,  0.0f),
-    glm::vec3(2.0f,  5.0f, -15.0f),
-    glm::vec3(-1.5f, -2.2f, -2.5f),
-    glm::vec3(-3.8f, -2.0f, -12.3f),
-    glm::vec3(2.4f, -0.4f, -3.5f),
-    glm::vec3(-1.7f,  3.0f, -7.5f),
-    glm::vec3(1.3f, -2.0f, -2.5f),
-    glm::vec3(1.5f,  2.0f, -2.5f),
-    glm::vec3(1.5f,  0.2f, -1.5f),
-    glm::vec3(-1.3f,  1.0f, -1.5f)
-    };
+    glm::vec3 cubePositions[] = { glm::vec3(0.0f,  0.0f,  0.0f),
+                                    glm::vec3(2.0f,  5.0f, -15.0f),
+                                    glm::vec3(-1.5f, -2.2f, -2.5f),
+                                    glm::vec3(-3.8f, -2.0f, -12.3f),
+                                    glm::vec3(2.4f, -0.4f, -3.5f),
+                                    glm::vec3(-1.7f,  3.0f, -7.5f),
+                                    glm::vec3(1.3f, -2.0f, -2.5f),
+                                    glm::vec3(1.5f,  2.0f, -2.5f),
+                                    glm::vec3(1.5f,  0.2f, -1.5f),
+                                    glm::vec3(-1.3f,  1.0f, -1.5f) };
+
+    glm::vec3 pointLightPositions[] = { glm::vec3(0.7f,  0.2f,  2.0f),
+                                        glm::vec3(2.3f, -3.3f, -4.0f),
+                                        glm::vec3(-4.0f,  2.0f, -12.0f),
+                                        glm::vec3(0.0f,  0.0f, -3.0f) };
 
     unsigned int VBO, lightVAO;
     glGenVertexArrays(1, &lightVAO);
@@ -184,25 +187,49 @@ int main()
         lightShader.Use();
 
         lightShader.SetUniform3fv("viewPos", camera.m_position);
-        //lightShader.SetUniform3fv("light.position", lightPos);
+        lightShader.SetUniform1f("material.shininess", 32.0f);
 
-        lightShader.SetUniform3fv("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
-        lightShader.SetUniform3fv("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-        lightShader.SetUniform3fv("lightPos", lightPos);
-        lightShader.SetUniform3fv("light.position", camera.m_position);
-        lightShader.SetUniform3fv("light.direction", camera.m_front);
-        lightShader.SetUniform1f("light.cutOff", glm::cos(glm::radians(12.5f)));
-        lightShader.SetUniform1f("light.outerCutOff", glm::cos(glm::radians(17.5f)));
-        lightShader.SetUniform3fv("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
-        lightShader.SetUniform1f("material.shininess", 64.0f);
+        lightShader.SetUniform3fv("directionalLight.ambient", 
+            glm::vec3(0.05f, 0.05f, 0.05f));
+        lightShader.SetUniform3fv("directionalLight.diffuse", 
+            glm::vec3(0.4f, 0.4f, 0.4f));
+        lightShader.SetUniform3fv("directionalLight.specular", 
+            glm::vec3(0.5f, 0.5f, 0.5f));
+        lightShader.SetUniform3fv("directionalLight.direction",
+            glm::vec3(-0.2f, -1.0f, -0.3f));
 
-        lightShader.SetUniform3fv("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-        lightShader.SetUniform3fv("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-        lightShader.SetUniform3fv("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+        for (int i = 0; i < 4; i++)
+        {
+            std::string varName;
+            std::string indexStr = std::to_string(i);
+            varName = "pointLights[" + indexStr + "].";
 
-        lightShader.SetUniform1f("light.constant", 1.0f);
-        lightShader.SetUniform1f("light.linear", 0.09f);
-        lightShader.SetUniform1f("light.quadratic", 0.032f);
+            lightShader.SetUniform3fv(varName + "position", pointLightPositions[i]);
+            lightShader.SetUniform3f(varName + "ambient", 0.05f, 0.05f, 0.05f);
+            lightShader.SetUniform3f(varName + "diffuse", 0.8f, 0.8f, 0.8f);
+            lightShader.SetUniform3f(varName + "specular", 1.0f, 1.0f, 1.0f);
+            lightShader.SetUniform1f(varName + "constant", 1.0f);
+            lightShader.SetUniform1f(varName + "linear", 0.09);
+            lightShader.SetUniform1f(varName + "quadratic", 0.032);
+        }
+
+        //lightShader.SetUniform3fv("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
+        //lightShader.SetUniform3fv("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+        //lightShader.SetUniform3fv("lightPos", lightPos);
+        lightShader.SetUniform3fv("spotLight.position", camera.m_position);
+        lightShader.SetUniform3fv("spotLight.direction", camera.m_front);
+        lightShader.SetUniform1f("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+        lightShader.SetUniform1f("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
+
+        lightShader.SetUniform3fv("spotLight.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
+        lightShader.SetUniform3fv("spotLight.diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
+        lightShader.SetUniform3fv("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
+        lightShader.SetUniform1f("spotLight.constant", 1.0f);
+        lightShader.SetUniform1f("spotLight.linear", 0.09f);
+        lightShader.SetUniform1f("spotLight.quadratic", 0.032f);
+
+        //lightShader.SetUniform3fv("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
 
         // Update transformations matrices
         glm::mat4 projection = glm::perspective(glm::radians(camera.m_zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -237,13 +264,16 @@ int main()
         lightSourceShader.Use();
         lightSourceShader.SetUniformMatrix4fv("projection", projection);
         lightSourceShader.SetUniformMatrix4fv("view", view);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, lightPos);
-        model = glm::scale(model, glm::vec3(0.2f));
-        lightSourceShader.SetUniformMatrix4fv("model", model);
-
+        
         glBindVertexArray(lightSourceVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        for (int i = 0; i < 4; i++)
+        {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, pointLightPositions[i]);
+            model = glm::scale(model, glm::vec3(0.2f));
+            lightSourceShader.SetUniformMatrix4fv("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
