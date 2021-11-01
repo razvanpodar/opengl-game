@@ -2,7 +2,7 @@
 
 void TextureManager::LoadImage(const char* imagePath, const char* directoryPath)
 {
-    std::string path = std::string(directoryPath) + std::string(imagePath);
+    std::string path = std::string(directoryPath) + "/" + std::string(imagePath);
 	stbi_set_flip_vertically_on_load(true);
 	m_data = stbi_load(path.c_str(), &m_width, &m_height, &m_channels, 0);
 }

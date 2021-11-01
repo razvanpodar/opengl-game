@@ -81,7 +81,8 @@ int main()
                                     glm::vec3(1.5f,  0.2f, -1.5f),
                                     glm::vec3(-1.3f,  1.0f, -1.5f) };
 
-    Model backpack("res/survival_backpack/survival_backpack.fbx");
+    Model cube("res/tex_cube.obj");
+    Model plane("res/plane.obj");
 
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(window))
@@ -100,6 +101,7 @@ int main()
 
         shader.Use();
         shader.SetUniform3fv("viewPos", camera.m_position);
+        shader.SetUniform3fv("objectColor", glm::vec3(0.3f, 0.2f, 0.6f));
 
         // Update transformations matrices
         glm::mat4 projection = glm::perspective(glm::radians(camera.m_zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -111,7 +113,9 @@ int main()
         glm::mat4 model = glm::mat4(1.0f);
         shader.SetUniformMatrix4fv("model", model);
 
-        backpack.Draw(shader);
+        plane.Draw(shader);
+
+        cube.Draw(shader);
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
