@@ -75,5 +75,7 @@
     <None Include="shaders\lightSourceShader.vs" />
     <None Include="shaders\modelLoadingShader.fs" />
     <None Include="shaders\modelLoadingShader.vs" />
+    <None Include="shaders\singleColorShader.fs" />
+    <None Include="shaders\singleColorShader.vs" />
   </ItemGroup>
 </Project>

@@ -8,6 +8,8 @@ const char* vLightSourceShaderPath = "shaders/lightSourceShader.vs";
 const char* fLightSourceShaderPath = "shaders/lightSourceShader.fs";
 const char* vModelLoadingShaderPath = "shaders/modelLoadingShader.vs";
 const char* fModelLoadingShaderPath = "shaders/modelLoadingShader.fs";
+const char* vSingleColorShaderPath = "shaders/singleColorShader.vs";
+const char* fSingleColorShaderPath = "shaders/singleColorShader.fs";
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -59,6 +61,10 @@ int main()
 
     // Enable depth testing
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_STENCIL_TEST);
+    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
     // Initialize
     EventManager eventManager;
@@ -67,6 +73,7 @@ int main()
     Shader shader(vModelLoadingShaderPath, fModelLoadingShaderPath);
     Shader lightShader(vLightShaderPath, fLightShaderPath);
     Shader lightSourceShader(vLightSourceShaderPath, fLightSourceShaderPath);
+    Shader singleColorShader(vModelLoadingShaderPath, fSingleColorShaderPath);
 
     // Temporary - will be moved to some classes
 
@@ -97,25 +104,66 @@ int main()
 
         // Render here
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-        shader.Use();
-        shader.SetUniform3fv("viewPos", camera.m_position);
-        shader.SetUniform3fv("objectColor", glm::vec3(0.3f, 0.2f, 0.6f));
+        singleColorShader.Use();
+        singleColorShader.SetUniform3fv("viewPos", camera.m_position);
+        singleColorShader.SetUniform3fv("objectColor", glm::vec3(0.3f, 0.2f, 0.6f));
 
         // Update transformations matrices
         glm::mat4 projection = glm::perspective(glm::radians(camera.m_zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        shader.SetUniformMatrix4fv("projection", projection);
+        singleColorShader.SetUniformMatrix4fv("projection", projection);
 
         glm::mat4 view = camera.GetViewMatrix();
-        shader.SetUniformMatrix4fv("view", view);
+        singleColorShader.SetUniformMatrix4fv("view", view);
 
         glm::mat4 model = glm::mat4(1.0f);
-        shader.SetUniformMatrix4fv("model", model);
+        singleColorShader.SetUniformMatrix4fv("model", model);
 
+        shader.Use();
+
+        // Update transformations matrices
+        shader.SetUniformMatrix4fv("projection", projection);
+        shader.SetUniformMatrix4fv("view", view);
+
+        glStencilMask(0x00);
+        
+        shader.SetUniformMatrix4fv("model", model);
         plane.Draw(shader);
 
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glStencilMask(0xFF);
+
+        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+        shader.SetUniformMatrix4fv("model", model);
         cube.Draw(shader);
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(1.0f, 1.0f, 0.0f));
+        shader.SetUniformMatrix4fv("model", model);
+        cube.Draw(shader);
+
+        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+        glStencilMask(0x00);
+        glDisable(GL_DEPTH_TEST);
+        singleColorShader.Use();
+
+        float scale = 1.1;
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+        model = glm::scale(model, glm::vec3(scale, scale, scale));
+        singleColorShader.SetUniformMatrix4fv("model", model);
+        cube.Draw(singleColorShader);
+        
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(1.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(scale, scale, scale));
+        singleColorShader.SetUniformMatrix4fv("model", model);
+        cube.Draw(singleColorShader);
+
+        glStencilMask(0xFF);
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glEnable(GL_DEPTH_TEST);
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
