@@ -5,6 +5,8 @@
 
 Dependencies/
 Game/src/vendor/
+Game/res/
+Game/*.dll
 
 # User-specific files
 *.rsuser

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -11,7 +13,7 @@
 #include "Camera.h"
 #include "EventManager.h"
 #include "Shader.h"
-#include "TextureManager.h"
+#include "Model.h"
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);

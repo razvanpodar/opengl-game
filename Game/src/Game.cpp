@@ -6,6 +6,8 @@ const char* vLightShaderPath = "shaders/lightShader.vs";
 const char* fLightShaderPath = "shaders/lightShader.fs";
 const char* vLightSourceShaderPath = "shaders/lightSourceShader.vs";
 const char* fLightSourceShaderPath = "shaders/lightSourceShader.fs";
+const char* vModelLoadingShaderPath = "shaders/modelLoadingShader.vs";
+const char* fModelLoadingShaderPath = "shaders/modelLoadingShader.fs";
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -61,57 +63,12 @@ int main()
     // Initialize
     EventManager eventManager;
     TextureManager textureManager;
-    Shader shader(vShaderPath, fShaderPath);
+    //Shader shader(vShaderPath, fShaderPath);
+    Shader shader(vModelLoadingShaderPath, fModelLoadingShaderPath);
     Shader lightShader(vLightShaderPath, fLightShaderPath);
     Shader lightSourceShader(vLightSourceShaderPath, fLightSourceShaderPath);
 
     // Temporary - will be moved to some classes
-
-    // cube
-    float vertices[] = {
-        // positions          // normals           // texture coords
-        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-
-        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-
-        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-
-        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
-    };
 
     glm::vec3 cubePositions[] = { glm::vec3(0.0f,  0.0f,  0.0f),
                                     glm::vec3(2.0f,  5.0f, -15.0f),
@@ -124,50 +81,7 @@ int main()
                                     glm::vec3(1.5f,  0.2f, -1.5f),
                                     glm::vec3(-1.3f,  1.0f, -1.5f) };
 
-    glm::vec3 pointLightPositions[] = { glm::vec3(0.7f,  0.2f,  2.0f),
-                                        glm::vec3(2.3f, -3.3f, -4.0f),
-                                        glm::vec3(-4.0f,  2.0f, -12.0f),
-                                        glm::vec3(0.0f,  0.0f, -3.0f) };
-
-    unsigned int VBO, lightVAO;
-    glGenVertexArrays(1, &lightVAO);
-    glGenBuffers(1, &VBO);
-    
-    glBindVertexArray(lightVAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-
-    unsigned int lightSourceVAO;
-    glGenVertexArrays(1, &lightSourceVAO);
-
-    glBindVertexArray(lightSourceVAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    textureManager.LoadImage("res/container2.png");
-    textureManager.AddTexture(1);
-
-    textureManager.LoadImage("res/container2_specular.png");
-    textureManager.AddTexture(1);
-
-    // Bind textures
-    //textureManager.BindTexture(1);
-    lightShader.Use();
-    lightShader.SetUniform1i("material.diffuse", 0);
-    lightShader.SetUniform1i("material.specular", 1);
+    Model backpack("res/survival_backpack/survival_backpack.fbx");
 
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(window))
@@ -184,96 +98,20 @@ int main()
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        lightShader.Use();
-
-        lightShader.SetUniform3fv("viewPos", camera.m_position);
-        lightShader.SetUniform1f("material.shininess", 32.0f);
-
-        lightShader.SetUniform3fv("directionalLight.ambient", 
-            glm::vec3(0.05f, 0.05f, 0.05f));
-        lightShader.SetUniform3fv("directionalLight.diffuse", 
-            glm::vec3(0.4f, 0.4f, 0.4f));
-        lightShader.SetUniform3fv("directionalLight.specular", 
-            glm::vec3(0.5f, 0.5f, 0.5f));
-        lightShader.SetUniform3fv("directionalLight.direction",
-            glm::vec3(-0.2f, -1.0f, -0.3f));
-
-        for (int i = 0; i < 4; i++)
-        {
-            std::string varName;
-            std::string indexStr = std::to_string(i);
-            varName = "pointLights[" + indexStr + "].";
-
-            lightShader.SetUniform3fv(varName + "position", pointLightPositions[i]);
-            lightShader.SetUniform3f(varName + "ambient", 0.05f, 0.05f, 0.05f);
-            lightShader.SetUniform3f(varName + "diffuse", 0.8f, 0.8f, 0.8f);
-            lightShader.SetUniform3f(varName + "specular", 1.0f, 1.0f, 1.0f);
-            lightShader.SetUniform1f(varName + "constant", 1.0f);
-            lightShader.SetUniform1f(varName + "linear", 0.09);
-            lightShader.SetUniform1f(varName + "quadratic", 0.032);
-        }
-
-        //lightShader.SetUniform3fv("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
-        //lightShader.SetUniform3fv("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-        //lightShader.SetUniform3fv("lightPos", lightPos);
-        lightShader.SetUniform3fv("spotLight.position", camera.m_position);
-        lightShader.SetUniform3fv("spotLight.direction", camera.m_front);
-        lightShader.SetUniform1f("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
-        lightShader.SetUniform1f("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
-
-        lightShader.SetUniform3fv("spotLight.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
-        lightShader.SetUniform3fv("spotLight.diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
-        lightShader.SetUniform3fv("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
-
-        lightShader.SetUniform1f("spotLight.constant", 1.0f);
-        lightShader.SetUniform1f("spotLight.linear", 0.09f);
-        lightShader.SetUniform1f("spotLight.quadratic", 0.032f);
-
-        //lightShader.SetUniform3fv("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+        shader.Use();
+        shader.SetUniform3fv("viewPos", camera.m_position);
 
         // Update transformations matrices
         glm::mat4 projection = glm::perspective(glm::radians(camera.m_zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        lightShader.SetUniformMatrix4fv("projection", projection);
+        shader.SetUniformMatrix4fv("projection", projection);
 
         glm::mat4 view = camera.GetViewMatrix();
-        lightShader.SetUniformMatrix4fv("view", view);
+        shader.SetUniformMatrix4fv("view", view);
 
         glm::mat4 model = glm::mat4(1.0f);
-        lightShader.SetUniformMatrix4fv("model", model);
+        shader.SetUniformMatrix4fv("model", model);
 
-        textureManager.BindTexture(0);
-        textureManager.BindTexture(1);
-
-        glBindVertexArray(lightVAO);
-
-        for (unsigned int i = 0; i < 10; i++)
-        {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-            float angle = 20.0f * i;
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-            lightShader.SetUniformMatrix4fv("model", model);
-
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
-
-        // Draw
-        //glDrawArrays(GL_TRIANGLES, 0, 36);
-        //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-        lightSourceShader.Use();
-        lightSourceShader.SetUniformMatrix4fv("projection", projection);
-        lightSourceShader.SetUniformMatrix4fv("view", view);
-        
-        glBindVertexArray(lightSourceVAO);
-        for (int i = 0; i < 4; i++)
-        {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, pointLightPositions[i]);
-            model = glm::scale(model, glm::vec3(0.2f));
-            lightSourceShader.SetUniformMatrix4fv("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
+        backpack.Draw(shader);
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
@@ -283,9 +121,6 @@ int main()
     }
 
     //glDeleteVertexArrays(1, &VAO);
-    glDeleteVertexArrays(1, &lightVAO);
-    glDeleteVertexArrays(1, &lightSourceVAO);
-    glDeleteBuffers(1, &VBO);
     shader.Delete();
     lightShader.Delete();
     lightSourceShader.Delete();
