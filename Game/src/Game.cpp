@@ -72,12 +72,14 @@ int main()
 
     // Temporary - will be moved to some classes
 
-    std::vector<glm::vec3> vegetation;
-    vegetation.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
-    vegetation.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
-    vegetation.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
-    vegetation.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
-    vegetation.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
+    std::vector<glm::vec3> windows
+    {
+        glm::vec3(-1.5f, 0.0f, -0.48f),
+        glm::vec3(1.5f, 0.0f, 0.51f),
+        glm::vec3(0.0f, 0.0f, 0.7f),
+        glm::vec3(-0.3f, 0.0f, -2.3f),
+        glm::vec3(0.5f, 0.0f, -0.6f)
+    };
 
     float transparentVertices[] = {
         // positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
@@ -90,11 +92,11 @@ int main()
         1.0f,  0.5f,  0.0f,  1.0f,  0.0f
     };
 
-    unsigned int vegetationVAO, vegetationVBO;
-    glGenVertexArrays(1, &vegetationVAO);
-    glGenBuffers(1, &vegetationVBO);
-    glBindVertexArray(vegetationVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, vegetationVBO);
+    unsigned int blendingVAO, blendingVBO;
+    glGenVertexArrays(1, &blendingVAO);
+    glGenBuffers(1, &blendingVBO);
+    glBindVertexArray(blendingVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, blendingVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(transparentVertices), &transparentVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
@@ -104,8 +106,8 @@ int main()
 
     //Model cube("res/tex_cube.obj");
     //Model plane("res/plane.obj");
-    textureManager.LoadImage("grass.png", "res");
-    textureManager.AddTexture("texture_diffuse", "grass.png");
+    textureManager.LoadImage("blending_transparent_window.png", "res");
+    textureManager.AddTexture("texture_diffuse", "blending_transparent_window.png");
 
     shader.Use();
     shader.SetUniform1i("texture1", 0);
@@ -129,6 +131,13 @@ int main()
         shader.SetUniform3fv("viewPos", camera.m_position);
         shader.SetUniform3fv("objectColor", glm::vec3(0.3f, 0.2f, 0.6f));
 
+        std::map<float, glm::vec3> sorted;
+        for (unsigned int i = 0; i < windows.size(); i++)
+        {
+            float distance = glm::length(camera.m_position - windows[i]);
+            sorted[distance] = windows[i];
+        }
+
         // Update transformations matrices
         glm::mat4 projection = glm::perspective(glm::radians(camera.m_zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         shader.SetUniformMatrix4fv("projection", projection);
@@ -142,17 +151,15 @@ int main()
         //plane.Draw(shader);
         //cube.Draw(shader);
         
-        glBindVertexArray(vegetationVAO);
+        glBindVertexArray(blendingVAO);
         textureManager.BindTexture(0);
-
-        for (unsigned int i = 0; i < vegetation.size(); i++)
+        for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
         {
             model = glm::mat4(1.0f);
-            model = glm::translate(model, vegetation[i]);
+            model = glm::translate(model, it->second);
             shader.SetUniformMatrix4fv("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 6);
         }
-
         glBindVertexArray(0);
 
         // Swap front and back buffers
