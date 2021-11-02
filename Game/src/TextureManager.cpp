@@ -9,49 +9,41 @@ void TextureManager::LoadImage(const char* imagePath, const char* directoryPath)
 
 int TextureManager::AddTexture(std::string type, std::string path)
 {
-    if (m_textureCount > TEXTURE_COUNT || m_textureCount < 0)
+    glGenTextures(1, &m_textures[m_textureCount].id);
+    glBindTexture(GL_TEXTURE_2D, m_textures[m_textureCount].id);
+
+    // Set wrapping type
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    // Set filtering type
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    if (m_data)
     {
-        std::cout << "TEXTURE::MANAGER::Max texture count was exceeded!" << std::endl;
-        return -1;
+        m_textures[m_textureCount].type = type;
+        m_textures[m_textureCount].path = path;
+        // Generate texture
+        if (m_channels == 3) // for jpg
+        {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_width, m_height, 0, GL_RGB, GL_UNSIGNED_BYTE, m_data);
+            glGenerateMipmap(GL_TEXTURE_2D);
+        }
+        else if (m_channels == 4) // for png
+        {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_data);
+            glGenerateMipmap(GL_TEXTURE_2D);
+        }
+        stbi_image_free(m_data);
     }
     else
     {
-        glGenTextures(1, &m_textures[m_textureCount].id);
-        glBindTexture(GL_TEXTURE_2D, m_textures[m_textureCount].id);
-
-        // Set wrapping type
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-        // Set filtering type
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        if (m_data)
-        {
-            m_textures[m_textureCount].type = type;
-            m_textures[m_textureCount].path = path;
-            // Generate texture
-            if (m_channels == 3) // for jpg
-            {
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_width, m_height, 0, GL_RGB, GL_UNSIGNED_BYTE, m_data);
-                glGenerateMipmap(GL_TEXTURE_2D);
-            }
-            else if (m_channels == 4) // for png
-            {
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_data);
-                glGenerateMipmap(GL_TEXTURE_2D);
-            }
-            stbi_image_free(m_data);
-        }
-        else
-        {
-            std::cout << "TEXTURE::MANAGER::No image loaded!" << std::endl;
-        }
-
-        // Return the index of the texture that was added
-        return m_textureCount++;
+        std::cout << "TEXTURE::MANAGER::No image loaded!" << std::endl;
     }
+
+    // Return the index of the texture that was added
+    return m_textureCount++;
 }
 
 void TextureManager::BindTexture(int index)

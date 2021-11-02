@@ -8,8 +8,6 @@ const char* vLightSourceShaderPath = "shaders/lightSourceShader.vs";
 const char* fLightSourceShaderPath = "shaders/lightSourceShader.fs";
 const char* vModelLoadingShaderPath = "shaders/modelLoadingShader.vs";
 const char* fModelLoadingShaderPath = "shaders/modelLoadingShader.fs";
-const char* vSingleColorShaderPath = "shaders/singleColorShader.vs";
-const char* fSingleColorShaderPath = "shaders/singleColorShader.fs";
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -61,10 +59,8 @@ int main()
 
     // Enable depth testing
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    glEnable(GL_STENCIL_TEST);
-    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Initialize
     EventManager eventManager;
@@ -73,23 +69,46 @@ int main()
     Shader shader(vModelLoadingShaderPath, fModelLoadingShaderPath);
     Shader lightShader(vLightShaderPath, fLightShaderPath);
     Shader lightSourceShader(vLightSourceShaderPath, fLightSourceShaderPath);
-    Shader singleColorShader(vModelLoadingShaderPath, fSingleColorShaderPath);
 
     // Temporary - will be moved to some classes
 
-    glm::vec3 cubePositions[] = { glm::vec3(0.0f,  0.0f,  0.0f),
-                                    glm::vec3(2.0f,  5.0f, -15.0f),
-                                    glm::vec3(-1.5f, -2.2f, -2.5f),
-                                    glm::vec3(-3.8f, -2.0f, -12.3f),
-                                    glm::vec3(2.4f, -0.4f, -3.5f),
-                                    glm::vec3(-1.7f,  3.0f, -7.5f),
-                                    glm::vec3(1.3f, -2.0f, -2.5f),
-                                    glm::vec3(1.5f,  2.0f, -2.5f),
-                                    glm::vec3(1.5f,  0.2f, -1.5f),
-                                    glm::vec3(-1.3f,  1.0f, -1.5f) };
+    std::vector<glm::vec3> vegetation;
+    vegetation.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
+    vegetation.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
+    vegetation.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
+    vegetation.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
+    vegetation.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
 
-    Model cube("res/tex_cube.obj");
-    Model plane("res/plane.obj");
+    float transparentVertices[] = {
+        // positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
+        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+        0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
+        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+
+        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+        1.0f,  0.5f,  0.0f,  1.0f,  0.0f
+    };
+
+    unsigned int vegetationVAO, vegetationVBO;
+    glGenVertexArrays(1, &vegetationVAO);
+    glGenBuffers(1, &vegetationVBO);
+    glBindVertexArray(vegetationVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, vegetationVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(transparentVertices), &transparentVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glBindVertexArray(0);
+
+    //Model cube("res/tex_cube.obj");
+    //Model plane("res/plane.obj");
+    textureManager.LoadImage("grass.png", "res");
+    textureManager.AddTexture("texture_diffuse", "grass.png");
+
+    shader.Use();
+    shader.SetUniform1i("texture1", 0);
 
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(window))
@@ -104,66 +123,37 @@ int main()
 
         // Render here
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        singleColorShader.Use();
-        singleColorShader.SetUniform3fv("viewPos", camera.m_position);
-        singleColorShader.SetUniform3fv("objectColor", glm::vec3(0.3f, 0.2f, 0.6f));
+        shader.Use();
+        shader.SetUniform3fv("viewPos", camera.m_position);
+        shader.SetUniform3fv("objectColor", glm::vec3(0.3f, 0.2f, 0.6f));
 
         // Update transformations matrices
         glm::mat4 projection = glm::perspective(glm::radians(camera.m_zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        singleColorShader.SetUniformMatrix4fv("projection", projection);
+        shader.SetUniformMatrix4fv("projection", projection);
 
         glm::mat4 view = camera.GetViewMatrix();
-        singleColorShader.SetUniformMatrix4fv("view", view);
-
-        glm::mat4 model = glm::mat4(1.0f);
-        singleColorShader.SetUniformMatrix4fv("model", model);
-
-        shader.Use();
-
-        // Update transformations matrices
-        shader.SetUniformMatrix4fv("projection", projection);
         shader.SetUniformMatrix4fv("view", view);
 
-        glStencilMask(0x00);
+        glm::mat4 model = glm::mat4(1.0f);
+        shader.SetUniformMatrix4fv("model", model);
+
+        //plane.Draw(shader);
+        //cube.Draw(shader);
         
-        shader.SetUniformMatrix4fv("model", model);
-        plane.Draw(shader);
+        glBindVertexArray(vegetationVAO);
+        textureManager.BindTexture(0);
 
-        glStencilFunc(GL_ALWAYS, 1, 0xFF);
-        glStencilMask(0xFF);
+        for (unsigned int i = 0; i < vegetation.size(); i++)
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, vegetation[i]);
+            shader.SetUniformMatrix4fv("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
 
-        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-        shader.SetUniformMatrix4fv("model", model);
-        cube.Draw(shader);
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(1.0f, 1.0f, 0.0f));
-        shader.SetUniformMatrix4fv("model", model);
-        cube.Draw(shader);
-
-        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-        glStencilMask(0x00);
-        glDisable(GL_DEPTH_TEST);
-        singleColorShader.Use();
-
-        float scale = 1.1;
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-        model = glm::scale(model, glm::vec3(scale, scale, scale));
-        singleColorShader.SetUniformMatrix4fv("model", model);
-        cube.Draw(singleColorShader);
-        
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(1.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(scale, scale, scale));
-        singleColorShader.SetUniformMatrix4fv("model", model);
-        cube.Draw(singleColorShader);
-
-        glStencilMask(0xFF);
-        glStencilFunc(GL_ALWAYS, 1, 0xFF);
-        glEnable(GL_DEPTH_TEST);
+        glBindVertexArray(0);
 
         // Swap front and back buffers
         glfwSwapBuffers(window);

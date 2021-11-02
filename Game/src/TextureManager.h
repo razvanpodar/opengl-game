@@ -31,6 +31,10 @@ public:
 	{
 		return m_textures[index].type;
 	}
+	unsigned int GetTextureId(int index)
+	{
+		return m_textures[index].id;
+	}
 	void LoadImage(const char* imagePath, const char* directoryPath);
 	int AddTexture(const std::string type, const std::string path);
 	void BindTexture(int index);
