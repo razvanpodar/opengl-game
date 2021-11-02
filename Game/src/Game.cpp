@@ -26,7 +26,6 @@ bool firstMouse = true;
 // lighting
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
-
 int main()
 {
     GLFWwindow* window;
@@ -59,8 +58,8 @@ int main()
 
     // Enable depth testing
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
 
     // Initialize
     EventManager eventManager;
@@ -72,45 +71,7 @@ int main()
 
     // Temporary - will be moved to some classes
 
-    std::vector<glm::vec3> windows
-    {
-        glm::vec3(-1.5f, 0.0f, -0.48f),
-        glm::vec3(1.5f, 0.0f, 0.51f),
-        glm::vec3(0.0f, 0.0f, 0.7f),
-        glm::vec3(-0.3f, 0.0f, -2.3f),
-        glm::vec3(0.5f, 0.0f, -0.6f)
-    };
-
-    float transparentVertices[] = {
-        // positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
-        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
-        0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
-        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
-
-        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
-        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
-        1.0f,  0.5f,  0.0f,  1.0f,  0.0f
-    };
-
-    unsigned int blendingVAO, blendingVBO;
-    glGenVertexArrays(1, &blendingVAO);
-    glGenBuffers(1, &blendingVBO);
-    glBindVertexArray(blendingVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, blendingVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(transparentVertices), &transparentVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    glBindVertexArray(0);
-
-    //Model cube("res/tex_cube.obj");
-    //Model plane("res/plane.obj");
-    textureManager.LoadImage("blending_transparent_window.png", "res");
-    textureManager.AddTexture("texture_diffuse", "blending_transparent_window.png");
-
-    shader.Use();
-    shader.SetUniform1i("texture1", 0);
+    Model cube("res/tex_cube.obj");
 
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(window))
@@ -131,13 +92,6 @@ int main()
         shader.SetUniform3fv("viewPos", camera.m_position);
         shader.SetUniform3fv("objectColor", glm::vec3(0.3f, 0.2f, 0.6f));
 
-        std::map<float, glm::vec3> sorted;
-        for (unsigned int i = 0; i < windows.size(); i++)
-        {
-            float distance = glm::length(camera.m_position - windows[i]);
-            sorted[distance] = windows[i];
-        }
-
         // Update transformations matrices
         glm::mat4 projection = glm::perspective(glm::radians(camera.m_zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         shader.SetUniformMatrix4fv("projection", projection);
@@ -149,18 +103,7 @@ int main()
         shader.SetUniformMatrix4fv("model", model);
 
         //plane.Draw(shader);
-        //cube.Draw(shader);
-        
-        glBindVertexArray(blendingVAO);
-        textureManager.BindTexture(0);
-        for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
-        {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, it->second);
-            shader.SetUniformMatrix4fv("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 6);
-        }
-        glBindVertexArray(0);
+        cube.Draw(shader);       
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
